@@ -1,39 +1,64 @@
 import PySimpleGUI as sg
+import youtube_dl
 from pytube import YouTube
 
-def run_pytube(link,pasta):
-    yt = YouTube(link)
+
+class Tela:
+    def __init__(self):
+        #layout
+        layout = [
+            [sg.Text('Link do Youtube:')],
+            [sg.Input(key='link', size=(50), do_not_clear=False)],
+            [sg.Text('Pasta de Destino:')],
+            [sg.Input(key='pasta', size=(50), do_not_clear=False), sg.FolderBrowse()],
+            [sg.Button('Converter'), sg.Button('Limpar')],
+            [sg.Output(size=(50, 10))]
+        ]
+        #janela
+        self.janela = sg.Window('Nome da Janela',layout)
+
+    def Iniciar(self):
+        while True:
+            self.button, self.values = self.janela.Read()
+            if self.button == sg.WINDOW_CLOSED:
+                break
+            if self.button == 'Converter':
+                print('OK')
+
+
+def run_youtubedl():
+    video_url = input("please enter youtube video url:\n")
+    video_info = youtube_dl.YoutubeDL().extract_info(
+        url = video_url,download=False
+    )
+    filename = f"{video_info['title']}.mp3"
+    options={
+        'format':'bestaudio/best',
+        'keepvideo':False,
+        'outtmpl':filename,
+    }
+
+    with youtube_dl.YoutubeDL(options) as ydl:
+        ydl.download([video_info['webpage_url']])
+
+    print("Download complete... {}".format(filename))
+
+def run_pytube():
+
+    yt = YouTube('https://www.youtube.com/watch?v=W4yiW11DtoU')
+
+    #video = yt.streams.filter(abr='128kbps')
     video = yt.streams.get_by_itag(140)
     filename = "{}.mp3".format(yt.title)
-    if '|' in filename:
-        filename = filename.replace('|','-')
-    elif '/' in filename:
-        filename = filename.replace('/', '-')
-    if pasta:
-        pasta = r'{}/'.format(pasta)
-        file = video.download(filename=filename, output_path=pasta)
-    else:
-        file = video.download(filename=filename)
-    print('Conversão Concluída!\nLocal: {}'.format(file))
+    print(video.download(filename=filename))
+
+    #video.
+
+    #video.download(output_path='',filename='')
 
 
-layout = [
-            [sg.Text('Link do Youtube:')],
-            [sg.Input(key='link',size=(50), do_not_clear=False)],
-            [sg.Text('Local de Destino:')],
-            [sg.Input(key='pasta',size=(50), do_not_clear=False), sg.FolderBrowse()],
-            [sg.Button('Converter'),sg.Button('Limpar')],
-            [sg.Output(size=(50,10))]
-        ]
 
-window = sg.Window('Youtube para Mp3', layout, icon=r'C:\Users\Paulo\Documents\Projetos\DIO\interfaces\convert.ico')
-
-while True:
-    event, values = window.read()
-    if event == sg.WINDOW_CLOSED:
-        break
-    if event == 'Converter':
-        if 'youtube' in values['link'] and 'http' in values['link'] and 'watch' in values['link']:
-            run_pytube(values['link'],values['pasta'])
-        else:
-            print('Link/URL Invalído! Por favor, tente novamente!')
+if __name__=='__main__':
+    #run_pytube()
+    tela = Tela()
+    tela.Iniciar()
